@@ -22,9 +22,9 @@ def gauss_jordan(aug, m, n):
                     break
         if not found_piv:
             continue
-        if i == 2:
-            print pivot
-        print pivot
+        #if i == 2:
+        #    print pivot
+        #print pivot
         if pivot[0] != i:
             for j in range(n):
                 aug[i][j], aug[pivot[0]][j] = aug[pivot[0]][j], aug[i][j]
@@ -39,7 +39,7 @@ def gauss_jordan(aug, m, n):
                 continue
             #print j, i
             ratio = aug[j][pivot[1]]
-            print ratio
+            #print ratio
             for k in range(n):
                 aug[j][k] = aug[j][k] - ratio * aug[i][k]
         pretty_print(aug)
@@ -109,7 +109,7 @@ def solve_gj_one(A, b, X):
             else:
                 print a[4],
     else:
-        print "MORE THAN ONE"
+        print "MORE THAN ONE!"
 
 
 def solve_gj_two(A, b, X):
@@ -133,6 +133,8 @@ def solve_gj_two(A, b, X):
     ans_gauss, pivots, free = gauss_jordan(A, n, k + 1)
     zero = 0
     pretty_print(ans_gauss)
+    print(pivots)
+    print(free)
 
     for i in range(n):
         if count_nonzero(ans_gauss[i]) == 0 and abs(ans_gauss[i][k]) > eps:
@@ -143,8 +145,8 @@ def solve_gj_two(A, b, X):
         elif count_nonzero(ans_gauss[i]) == 0 and abs(ans_gauss[i][k]) < eps:
             zero = zero + 1
     ans_ex = zero <= n - k
-    print zero
-    print n - k
+    #print zero
+    #print n - k
     if ans_ex:
         for i in range(n):
             if ans_gauss[i][k] < -eps:
@@ -160,23 +162,12 @@ def solve_gj_two(A, b, X):
                 else:
                     print a[k],
     else:
-        print "MORE THAN ONE"
-        l = 0
-        for i in range(n - zero):
-            print 'here'
-            if abs(A[i][l]) > eps:
-                l = i
-                print l
-                print "x_" + str(l+1), "=",
-            else:
-                l = i
-                while abs(A[i][l]) < eps:
-                    l = l + 1
-                    if l == k:
-                        continue
-                print "x_" + str(l+1), "=",
+        print "MORE THAN ONE!"
+        for i in range(len(pivots)):
+            cur_index = pivots[i]
+            print "x_" + str(cur_index + 1), "=",
             first = True
-            for j in range(l + 1, k + 1):
+            for j in range(cur_index + 1, k + 1):
                 if j < k and abs(A[i][j]) > eps:
                     if abs(A[i][j] - int(A[i][j])) < eps:
                         coeff = str(-1* int(A[i][j]))
@@ -195,19 +186,24 @@ def solve_gj_two(A, b, X):
                         print str(coeff) + "x_" + str(j + 1),
                     first = False
                 elif j == k:
-                    if A[i][k] > eps:
+                    if abs(A[i][j] - int(A[i][j])) < eps:
+                        coeff = str(int(A[i][j]))
+                    else:
+                        coeff = str(A[i][j])
+                    if A[i][k] > eps and not first:
                         print "+",
                     if not first:
-                        print str(A[i][k]).replace('-', '- ')
+                        print str(coeff).replace('-', '- ')
                     else:
-                        print A[i][k]
-            l = l +1
+                        print coeff
+        for free_var in free:
+            print 'x_' + str(free_var + 1),
 
-        print(A)
-        for i in range(n):
-            if A[i][i] == 0:
-                print 0,
-            else: print A[i][k]
+        #why am I doing this?
+        if len(free) == 1:
+            print 'is a free variable'
+        elif len(free) > 1:
+            print 'are free variables'
 
 
 if __name__ == '__main__':
@@ -227,7 +223,3 @@ if __name__ == '__main__':
         solve_gj_one(A, b, X)
     else:
         solve_gj_two(A, b, X)
-        '''else:
-            print "MORE THAN ONE"
-            for i in range(n):
-                if'''
