@@ -83,6 +83,12 @@ def solve_gj_one(A, b, X):
                 cur_line = cur_line + 1
             else:
                 X = map(float, line.split())
+
+    if check_for_sum_coeff:
+        for i in range(4):
+            if sum_column(A, i, 4) >= 1:
+                print "NOT POSSIBLE, SNAPE IS WICKED!"
+                sys.exit(0)
     ans_gauss, pivots, free = gauss_jordan(A, 4, 5)
     zero = 0
     #pretty_print(ans_gauss)
@@ -112,6 +118,13 @@ def solve_gj_one(A, b, X):
         print "MORE THAN ONE!"
 
 
+def sum_column(A, col, n):
+    sum = 0
+    for i in range(n):
+        sum += A[i][col]
+    return sum
+
+
 def solve_gj_two(A, b, X):
     cur_line = 0
     n = k = 0
@@ -130,8 +143,16 @@ def solve_gj_two(A, b, X):
                 cur_line = cur_line + 1
             else:
                 X = map(float, line.split())
+
+    if check_for_sum_coeff:
+        for i in range(k):
+            if sum_column(A, i, n) >= 1:
+                print "NOT POSSIBLE, SNAPE IS WICKED!"
+                sys.exit(0)
     ans_gauss, pivots, free = gauss_jordan(A, n, k + 1)
     zero = 0
+
+
     pretty_print(ans_gauss)
     print(pivots)
     print(free)
@@ -208,6 +229,7 @@ def solve_gj_two(A, b, X):
 
 if __name__ == '__main__':
 
+    check_for_sum_coeff = False
     eps = sys.float_info.epsilon
     part_one = True
     try:
