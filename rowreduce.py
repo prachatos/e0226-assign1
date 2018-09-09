@@ -42,7 +42,7 @@ def gauss_jordan(aug, m, n):
             #print ratio
             for k in range(n):
                 aug[j][k] = aug[j][k] - ratio * aug[i][k]
-        pretty_print(aug)
+        #pretty_print(aug)
     free_var = list(set(range(n - 1)) - set(pivot_list))
     free_var.sort()
     for i in range(m):
@@ -152,10 +152,9 @@ def solve_gj_two(A, b, X):
     ans_gauss, pivots, free = gauss_jordan(A, n, k + 1)
     zero = 0
 
-
-    pretty_print(ans_gauss)
-    print(pivots)
-    print(free)
+    #pretty_print(ans_gauss)
+    #print(pivots)
+    #print(free)
 
     for i in range(n):
         if count_nonzero(ans_gauss[i]) == 0 and abs(ans_gauss[i][k]) > eps:
@@ -175,7 +174,7 @@ def solve_gj_two(A, b, X):
                 ans_ex = False
                 sys.exit(0)
     if ans_ex:
-        print "EXACTLY ONE"
+        print "EXACTLY ONE!"
         for a in ans_gauss:
             if count_nonzero(a) > 0:
                 if a[k] - int(a[k]) < eps:

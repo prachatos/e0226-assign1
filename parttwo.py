@@ -19,7 +19,7 @@ def gauss_jordan(aug, m, n):
         if abs(piv_val) < eps:
             continue
         if piv_val != 1:
-            steps.append('MULTIPLY '+ str(1.0/piv_val) + ' ' + str(i + 1))
+            steps.append('MULTIPLY '+ str(round(1.0/piv_val, 3)) + ' ' + str(i + 1))
         for j in range(n):
             aug[i][j] = aug[i][j] / piv_val
 
@@ -28,10 +28,7 @@ def gauss_jordan(aug, m, n):
                 continue
             ratio = aug[j][i]
             if ratio != 0:
-                if ratio - int(ratio) < eps:
-                    steps.append('MULTIPLY&ADD ' + str(int(ratio))+ ' ' + str(i+1)+ ' ' + str(j+1))
-                else:
-                    steps.append('MULTIPLY&ADD '+ str(ratio)+ ' ' + str(i + 1)+ ' ' + str(j + 1))
+                steps.append('MULTIPLY&ADD '+ str(round(ratio, 3))+ ' ' + str(i + 1)+ ' ' + str(j + 1))
             for k in range(n):
                 aug[j][k] = aug[j][k] - ratio * aug[i][k]
     ac_rc_zero = False
