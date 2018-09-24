@@ -1,40 +1,63 @@
-import multiprocessing
+import itertools
 import random
 import sys
 
 
-def get_valid_soln(Xp, fgl, new_eq):
-    eps = 1e-7
-    rand_set = []
-    ans_vec = [0 for a in range(len(Xp))]
+def get_random_ints(free, X):
+    try:
+        Z = [list(range(0, int(X[fr]) + 1)) for fr in free]
+    except OverflowError:
+        Z = [list(range(0, min(X[fr] + 1, 600000))) for fr in free]
+    pr = 1
+    for x in free:
+        pr *= (X[x] + 1)
+    pop = min(500000, int(pr))
+    if len(free) == 1:
+        return [[x] for x in random.sample(Z[0], pop)]
+    rsample = random.sample(list(itertools.product(*Z)), pop)
+    return rsample
+
+
+def get_valid_soln(new_eq, free, X):
+    ans_vec = [0 for a in range(len(X))]
     found = False
-    for x in range(0, 100000):
-        for fr in fgl:
-            rand_set.append(random.SystemRandom().randint(0, Xp[fr]))
+    found_at = 0
+    rand_set = get_random_ints(free, X)
+    for x in range(0, len(rand_set)):
         for y in range(len(new_eq)):
             ans = 0
             for i in range(len(new_eq[y])):
                 if i != len(new_eq[y]) - 1:
-                    ans += new_eq[y][i]*rand_set[i]
+                    ans += new_eq[y][i] * rand_set[x][i]
                 else:
                     ans += new_eq[y][i]
-            if ans < eps or ans > Xp[y]:
+            if ans < eps or ans > X[y]:
+
                 continue
             ans_vec[y] = ans
             if y == len(new_eq) - 1:
                 found = True
+                found_at = x
                 break
     # this means we're done
+
     if found:
         i = 0
-        for fr in fgl:
-            ans_vec[fr] = rand_set[i]
+        for fr in free:
+            ans_vec[fr] = rand_set[found_at][i]
             i = i + 1
-        print ans_vec
-        sys.exit(1)
+        return True, ans_vec
     else:
-        print 'lul'
-        return
+        found_at = len(rand_set) - 1
+        for y in range(len(new_eq)):
+            ans = 0
+            for i in range(len(new_eq[y])):
+                if i != len(new_eq[y]) - 1:
+                    ans += new_eq[y][i] * rand_set[found_at][i]
+                else:
+                    ans += new_eq[y][i]
+            ans_vec[y] = ans
+        return False, ans_vec
 
 
 def write_list_to_file(f, l):
@@ -69,8 +92,7 @@ def read_file(part):
         with open(file) as f:
             for line in f:
                 if cur_line == 0:
-                    n = int(line.split()[0])
-                    k = int(line.split()[1])
+                    n, k = [int(x) for x in line.split()]
                     cur_line = cur_line + 1
                 elif cur_line == 1:
                     b = map(float, line.split())
@@ -151,7 +173,7 @@ def gauss_jordan(aug, m, n):
         if not found_piv:
             for j in range(i, n):
                 pivot = i, j
-                if abs(aug[i][j])> eps:
+                if abs(aug[i][j]) > eps:
                     found_piv = True
                     pivot_list.append(pivot[1])
                     break
@@ -170,7 +192,7 @@ def gauss_jordan(aug, m, n):
             if j == i:
                 continue
             ratio = aug[j][pivot[1]]
-            #print ratio
+            # print ratio
             for k in range(n):
                 aug[j][k] = aug[j][k] - ratio * aug[i][k]
     free_var = list(set(range(n - 1)) - set(pivot_list))
@@ -200,11 +222,18 @@ def sum_column(A, col, n):
     return sum
 
 
+def val_int(v):
+    if abs(v - int(round(v))) < 1e-7:
+        return int(round(v))
+    else:
+        return v
+
+
 def solve_gj_two(part):
     A, b, X, n, k = read_file(part)
     if check_for_sum_coeff:
         for i in range(k):
-            if sum_column(A, i, n) >= 1:
+            if sum_column(A, i, n) - 1 >= eps:
                 ans_queue.append("NOT POSSIBLE, SNAPE IS WICKED!")
                 return
     ans_gauss, pivots, free = gauss_jordan(A, n, k + 1)
@@ -214,7 +243,6 @@ def solve_gj_two(part):
         if count_nonzero(ans_gauss[i]) == 0 and abs(ans_gauss[i][k]) > eps:
             ans_queue.append("NOT POSSIBLE, SNAPE IS WICKED!")
 
-            ans_ex = False
             return
         elif count_nonzero(ans_gauss[i]) == 0 and abs(ans_gauss[i][k]) < eps:
             zero = zero + 1
@@ -223,46 +251,40 @@ def solve_gj_two(part):
         for i in range(n):
             if ans_gauss[i][k] < -eps:
                 ans_queue.append("NOT POSSIBLE, SNAPE IS WICKED!")
-                ans_ex = False
                 return
     answers = ""
     if ans_ex:
         for i in range(n):
             if ans_gauss[i][k] < -eps or ans_gauss[i][k] - X[i] > eps:
                 ans_queue.append("NOT POSSIBLE, SNAPE IS WICKED!")
-                ans_ex = False
                 return
         ans_queue.append("EXACTLY ONE!")
         for a in ans_gauss:
             if count_nonzero(a) > 0:
-                if a[k] - int(a[k]) < eps:
-                    answers += str(int(a[k])) + ' '
-                else:
-                    answers += a[k] + ' '
+                answers += str(val_int(a[k])) + ' '
         answers.rstrip()
         ans_queue.append(answers)
     else:
         ans_queue.append("MORE THAN ONE!")
-        ans_queue.append(print_general_soln(pivots, free, k))
-        global new_eq
-        global fgl
-        global Xp
-        fgl = free
-        Xp = X
         new_eq = []
         for br in pivots:
             new_param = []
             for fr in free:
-                new_param.append(-1*ans_gauss[br][fr])
+                new_param.append(-1 * ans_gauss[br][fr])
             new_param.append(ans_gauss[br][k])
             new_eq.append(new_param)
-        pool = multiprocessing.Pool(processes=1)
-        pool.apply_async(get_valid_soln, [Xp, fgl, new_eq]).get()
+        got_valid, soln = get_valid_soln(new_eq, free, X)
+        ans_str = ''
+        for val in soln:
+            ans_str += str(val_int(round(val, 6))) + ' '
+        ans_str.rstrip()
+        ans_queue.append(ans_str)
+        ans_queue.append(print_general_soln(pivots, free, k))
 
 
 if __name__ == '__main__':
 
-    check_for_sum_coeff = False
+    check_for_sum_coeff = True
     eps = 1e-7
     part_one = True
     try:
@@ -274,7 +296,6 @@ if __name__ == '__main__':
     A = []
     X = []
     ans_queue = []
-
     if part_one:
         op_file = open('output_problem1_part1.txt', 'w')
         solve_gj_two('one')
